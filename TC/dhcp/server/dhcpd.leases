@@ -1,0 +1,15 @@
+# The format of this file is documented in the dhcpd.leases(5) manual page.
+# This lease file was written by isc-dhcp-4.2.3-P2
+
+server-duid "\000\001\000\001\031%\247\273\010\000'\354\262V";
+
+lease 192.168.11.111 {
+  starts 3 2013/05/15 01:59:36;
+  ends 3 2013/05/15 02:09:36;
+  cltt 3 2013/05/15 01:59:36;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet 20:01:0d:a8:00:bf;
+  client-hostname "gnocuil-laptop-2-4over6";
+}

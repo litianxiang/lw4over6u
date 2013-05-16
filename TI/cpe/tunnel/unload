@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export CURDIR=$(pwd)
+
+echo Unloading lw4over6 module...
+rmmod $CURDIR/lw4over6.ko

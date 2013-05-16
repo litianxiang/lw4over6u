@@ -1,0 +1,2 @@
+binddir=/home/gnocuil/git/lw4o6/lightweight4over6/TC/dhcp/bind
+GMAKE=make
