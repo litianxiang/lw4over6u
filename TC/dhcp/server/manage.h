@@ -27,6 +27,10 @@ struct Binding {
 	uint32_t seconds;//lease time remaining
 	uint64_t in_pkts, in_bytes;//in:upstream, 4o6 in, v4 out
 	uint64_t out_pkts, out_bytes;//out:downstream, v4 in, 4o6 out
+
+    uint64_t in_bytes_cur[BPS_SECONDS];
+    uint64_t out_bytes_cur[BPS_SECONDS];
+    uint64_t in_bps, out_bps;
     
 };
 
