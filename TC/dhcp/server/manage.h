@@ -19,6 +19,7 @@
 #define TUNNEL_FLUSH_MAPPING  0x1b
 #define TUNNEL_MAPPING_NUM	 0x1c
 
+#define BPS_SECONDS 5
 
 struct Binding {
 	struct in_addr addr_TI;
