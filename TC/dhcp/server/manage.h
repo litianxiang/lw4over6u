@@ -1,7 +1,6 @@
 #ifndef __MANAGE_H__
 #define __MANAGE_H__
 
-#include <sys/types.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -10,48 +9,49 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stddef.h>
-
+#include <unistd.h>
 
 #define SERVER_NAME "lightweight4over6"
 
-#define TUNNEL_SET_MAPPING    0x48
-#define TUNNEL_DEL_MAPPING    0x49
-#define TUNNEL_GET_MAPPING    0x50
-#define TUNNEL_FLUSH_MAPPING  0x51
-#define TUNNEL_MAPPING_NUM    0x52
+#define TUNNEL_SET_MAPPING	 0x18
+#define TUNNEL_DEL_MAPPING	 0x19
+#define TUNNEL_GET_MAPPING	 0x1a
+#define TUNNEL_FLUSH_MAPPING  0x1b
+#define TUNNEL_MAPPING_NUM	 0x1c
+
 
 struct Binding {
-   struct in_addr addr_TI;
-   struct in6_addr addr6_TI, addr6_TC;
-   uint16_t pset_index, pset_mask; //port set
-   uint32_t seconds;//lease time remaining
-   uint64_t in_pkts, in_bytes;
-   uint64_t out_pkts, out_bytes;
+	struct in_addr addr_TI;
+	struct in6_addr addr6_TI, addr6_TC;
+	uint16_t pset_index, pset_mask; //port set
+	uint32_t seconds;//lease time remaining
+	uint64_t in_pkts, in_bytes;//in:upstream, 4o6 in, v4 out
+	uint64_t out_pkts, out_bytes;//out:downstream, v4 in, 4o6 out
+    
 };
 
 static int init_fd()
 {
 	int fd;
-	struct sockaddr_un addr;
-	size_t len;
-	if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {  
-		//fprintf(stderr, "init_fd: failed to create socket: %m\n", errno);
+	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {  
+		fprintf(stderr, "init_fd: failed to create socket: %m\n");
 		return -1;
 	}
-	//name the socket
-	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, SERVER_NAME);
-	addr.sun_path[0]=0;
-	len = strlen(SERVER_NAME)  + offsetof(struct sockaddr_un, sun_path);
-	int result = connect(fd, (struct sockaddr*)&addr, len);
-	if (result < 0) {
-		//fprintf(stderr, "init_fd: failed to connect: %m\n", errno);
-		return -1;
-	}
-	return fd;
+    struct sockaddr_in serv_addr;
+    memset((char *) &serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(8080);
+    inet_aton("127.0.0.1", &serv_addr.sin_addr);
+    if (connect(fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+        perror("ERROR connecting");
+        exit(0);
+    }
+    return fd;
 }
 
-int set_mapping(struct in_addr addr_TI, struct in6_addr addr6_TI, uint16_t pset_index, uint16_t pset_mask, struct in6_addr addr6_TC, uint32_t seconds)
+
+int set_mapping(struct in_addr addr_TI, struct in6_addr addr6_TI, uint16_t pset_index, 
+uint16_t pset_mask, struct in6_addr addr6_TC, uint32_t seconds)
 {
 	int fd = init_fd();
 	if (fd < 0)
@@ -87,45 +87,5 @@ int del_mapping(struct in_addr addr_TI, uint16_t pset_index, uint16_t pset_mask)
 	close(fd);
 	return 0;
 }
-/*
-int display_tc_mapping_table()
-{
-	int fd = init_fd();
-	if (fd < 0)
-		return -1;
-	uint8_t command = TUNNEL_GET_MAPPING;
-	write(fd, &command, 1);
-	uint32_t size;
-	read(fd, &size, 4);
-	printf("Number of records: %d\n", size);
-	int i;
-	char addr_TI[100] = {0};
-	char addr6_TI[100] = {0};
-	char addr6_TC[100] = {0};
-	printf("%-16s%-40s%-40s%-15s%-15s%-15s\n", "TI IPv4 Addr", "TI IPv6 Addr", "TC IPv6 Addr", "Port Index", "Port Mask", "Time Remaining"); 
-	for (i = 0; i < size; ++i) {
-		struct Binding binding;
-		read(fd, &binding, sizeof(struct Binding));
-		inet_ntop(AF_INET, (void*)&binding.addr_TI, addr_TI, 16);
-		inet_ntop(AF_INET6, (void*)&binding.addr6_TI, addr6_TI, 48);
-		inet_ntop(AF_INET6, (void*)&binding.addr6_TC, addr6_TC, 48);
-		printf("%-16s%-40s%-40s0x%-15x0x%-15x%-15d\n", addr_TI, addr6_TI, addr6_TC, binding.pset_index, binding.pset_mask, binding.seconds); 
-	}
-	close(fd);
-	return 0;
-}
-*/
-/*
-int del_all_mapping()
-{
-	int fd = init_fd();
-	if (fd < 0)
-		return -1;
-	uint8_t command = TUNNEL_FLUSH_MAPPING;
-	write(fd, &command, 1);
-	close(fd);
-	return 0;
-}
-*/
 
 #endif /* __MANAGE_H__ */
